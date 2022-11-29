@@ -4,7 +4,6 @@ import requests
 import telegram
 import sys
 import time
-from exceptions import TelegramError
 from dotenv import load_dotenv
 
 load_dotenv()
