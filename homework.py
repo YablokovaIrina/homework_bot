@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(stream='sys.stdout')
 logger.addHandler(handler)
 
+
 def check_tokens():
     """Проверка наличия токенов."""
     return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
@@ -48,7 +49,8 @@ def send_message(bot, message):
     except Exception as error:
         message = f'Сообщение не отправлено: {error}'
         logger.error(message)
-    
+
+
 def get_api_answer(timestamp):
     """Получаем ответ от API Практикума."""
     logger.info('Делаем запрос к API Практикума.')
@@ -62,6 +64,7 @@ def get_api_answer(timestamp):
         raise ReferenceError('Статус ответа API не OK')
     return response.json()
 
+
 def check_response(response):
     """Проверяет ответ API на корректность."""
     logger.info('Начало проверки на корректность')
@@ -72,6 +75,7 @@ def check_response(response):
     if not isinstance(response['homeworks'], list):
         raise TypeError('По ключу "homeworks" не получен список')
     return response['homeworks']
+
 
 def parse_status(homework):
     """Извлекаем информацию о конкретной домашней работе."""
@@ -84,6 +88,7 @@ def parse_status(homework):
         raise ValueError('Неизвестный статус')
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+
 
 def main():
     """Основная логика работы бота."""
