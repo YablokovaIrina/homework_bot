@@ -42,6 +42,8 @@ STATUS_CHANGED = 'Изменился статус проверки работы 
 ERROR_MESSAGE = 'Сбой в работе программы: {}'
 ERROR_SEND_MESSAGE = 'Ошибка при отправке сообщения: {}'
 CRITIKAL_ERROR = 'Проблемы с переменными окружения'
+CHECK_INFO = 'Начало проверки на корректность'
+PARSE_INFO = 'Извлекаем информацию о конкретной домашней работе'
 
 
 def send_message(bot, message):
@@ -72,7 +74,7 @@ def get_api_answer(timestamp):
 
 def check_response(response):
     """Проверяет ответ API на корректность."""
-    logging.info('Начало проверки на корректность')
+    logging.info(CHECK_INFO)
     if not isinstance(response, dict):
         raise TypeError(RESPONSE_NOT_DICT.format(type(response)))
     if 'homeworks' not in response:
@@ -85,7 +87,7 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлекаем информацию о конкретной домашней работе."""
-    logging.info('Извлекаем информацию о конкретной домашней работе.')
+    logging.info(PARSE_INFO)
     status = homework['status']
     if 'homework_name' not in homework:
         raise KeyError(HOMEWORK_NAME_NOT_FOUND)
@@ -131,15 +133,14 @@ def main():
                 bot.send_message(TELEGRAM_CHAT_ID, ERROR_MESSAGE.format(error))
             except Exception as error:
                 logging.exception(ERROR_SEND_MESSAGE.format(error))
-        finally:
-            time.sleep(RETRY_PERIOD)
+        time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s, %(name)s, %(levelname)s, %(message)s',
-        handlers = [
+        handlers=[
             logging.StreamHandler(stream='sys.stdout'),
             logging.FileHandler(__file__ + '.log')],
     )
