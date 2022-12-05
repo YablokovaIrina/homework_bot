@@ -118,11 +118,13 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка наличия токенов."""
+    token_list = []
     for name in TOKENS:
-        if globals()[name] not in TOKENS:
-            if globals()[name] is None:
-                logging.critical(CRITIKAL_ERROR.format(token=name))
-                return False
+        if globals()[name] is None:
+            token_list.append(name)
+    if token_list:
+        logging.critical(CRITIKAL_ERROR.format(token=token_list))
+        return False
     return True
 
 
@@ -138,12 +140,12 @@ def main():
             homeworks = check_response(response)
             if homeworks:
                 send_message(bot, parse_status(homeworks[0]))
-                timestamp = response.get('current_date', timestamp)
         except Exception as error:
             message = ERROR_MESSAGE.format(error=error)
             logging.exception(message)
             send_message(bot, message)
         finally:
+            timestamp = response.get('current_date', timestamp)
             time.sleep(RETRY_PERIOD)
 
 
