@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import time
 
 from dotenv import load_dotenv
@@ -18,7 +19,6 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-
 
 HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -111,18 +111,18 @@ def parse_status(homework):
         raise ValueError(UNKNOWN_STATUS.format(status))
     if 'homework_name' not in homework:
         raise KeyError(HOMEWORK_NAME_NOT_FOUND)
-    homework_name = homework['homework_name']
     return STATUS_CHANGED.format(
-        name=homework_name,
+        name=homework['homework_name'],
         verdict=HOMEWORK_VERDICTS[status])
 
 
 def check_tokens():
     """Проверка наличия токенов."""
     for name in TOKENS:
-        if globals()[name] is None:
-            logging.critical(CRITIKAL_ERROR.format(token=name))
-            return False
+        if globals()[name] not in TOKENS:
+            if globals()[name] is None:
+                logging.critical(CRITIKAL_ERROR.format(token=name))
+                return False
     return True
 
 
@@ -131,19 +131,20 @@ def main():
     if not check_tokens():
         raise ValueError(TOKEN_ERROR)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    timestamp = int(RETRY_PERIOD)
+    timestamp = int(time.time())
     while True:
         try:
             response = get_api_answer(timestamp)
             homeworks = check_response(response)
             if homeworks:
                 send_message(bot, parse_status(homeworks[0]))
-            timestamp = response.get('current_date', timestamp)
+                timestamp = response.get('current_date', timestamp)
         except Exception as error:
             message = ERROR_MESSAGE.format(error=error)
             logging.exception(message)
-            send_message(TELEGRAM_CHAT_ID, message)
-        time.sleep(RETRY_PERIOD)
+            send_message(bot, message)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
@@ -151,7 +152,7 @@ if __name__ == '__main__':
         level=logging.INFO,
         format='%(asctime)s, %(name)s, %(levelname)s, %(message)s',
         handlers=[
-            logging.StreamHandler(stream='sys.stdout'),
+            logging.StreamHandler(stream=sys.stdout),
             logging.FileHandler(__file__ + '.log')],
     )
     main()
