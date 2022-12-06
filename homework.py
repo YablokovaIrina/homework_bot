@@ -49,6 +49,7 @@ CRITIKAL_ERROR = 'Отсутсвует или некорректна перем�
 CHECK_INFO = 'Начало проверки на корректность'
 PARSE_INFO = 'Извлекаем информацию о конкретной домашней работе'
 TOKEN_ERROR = 'Отсутствуют переменные окружения'
+NOT_STATUS = 'Статус домашней работы не обновлен ревьюером'
 
 
 def send_message(bot, message):
@@ -118,10 +119,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка наличия токенов."""
-    token_list = []
-    for name in TOKENS:
-        if globals()[name] is None:
-            token_list.append(name)
+    token_list = [name for name in TOKENS if globals()[name] is None]
     if token_list:
         logging.critical(CRITIKAL_ERROR.format(token=token_list))
         return False
@@ -139,13 +137,16 @@ def main():
             response = get_api_answer(timestamp)
             homeworks = check_response(response)
             if homeworks:
-                send_message(bot, parse_status(homeworks[0]))
+                try:
+                    send_message(bot, parse_status(homeworks[0]))
+                    timestamp = response.get('current_date', timestamp)
+                except Exception:
+                    logging.exception(NOT_STATUS)
         except Exception as error:
             message = ERROR_MESSAGE.format(error=error)
             logging.exception(message)
             send_message(bot, message)
         finally:
-            timestamp = response.get('current_date', timestamp)
             time.sleep(RETRY_PERIOD)
 
 
