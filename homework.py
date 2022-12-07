@@ -49,7 +49,6 @@ CRITIKAL_ERROR = 'Отсутсвует или некорректна перем�
 CHECK_INFO = 'Начало проверки на корректность'
 PARSE_INFO = 'Извлекаем информацию о конкретной домашней работе'
 TOKEN_ERROR = 'Отсутствуют переменные окружения'
-NOT_STATUS = 'Статус домашней работы не обновлен ревьюером'
 
 
 def send_message(bot, message):
@@ -136,12 +135,9 @@ def main():
         try:
             response = get_api_answer(timestamp)
             homeworks = check_response(response)
+            timestamp = response.get('current_date', timestamp)
             if homeworks:
-                try:
-                    send_message(bot, parse_status(homeworks[0]))
-                    timestamp = response.get('current_date', timestamp)
-                except Exception:
-                    logging.exception(NOT_STATUS)
+                send_message(bot, parse_status(homeworks[0]))
         except Exception as error:
             message = ERROR_MESSAGE.format(error=error)
             logging.exception(message)
