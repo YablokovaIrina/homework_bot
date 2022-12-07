@@ -59,8 +59,10 @@ def send_message(bot, message):
             text=message,
         )
         logging.debug(SEND_MESSAGE_INFO.format(message))
+        return True
     except Exception as error:
         logging.exception(NOT_SENT_MESSAGE_INFO.format(message, error))
+        return False
 
 
 def get_api_answer(timestamp):
@@ -135,9 +137,9 @@ def main():
         try:
             response = get_api_answer(timestamp)
             homeworks = check_response(response)
-            timestamp = response.get('current_date', timestamp)
             if homeworks:
-                send_message(bot, parse_status(homeworks[0]))
+                if send_message(bot, parse_status(homeworks[0])):
+                    timestamp = response.get('current_date', timestamp)
         except Exception as error:
             message = ERROR_MESSAGE.format(error=error)
             logging.exception(message)
